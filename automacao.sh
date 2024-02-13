@@ -85,7 +85,7 @@ elif [ "$opcao" == 6 ]; then
 elif [ "$opcao" == 7 ]; then
     echo "Desligando..."
     sleep 3
-    sudo systemctl shutdown
+    sudo systemctl poweroff
 
 else
     echo "Esta opção não existe!"
