@@ -27,6 +27,8 @@ O objetivo deste repositório é fornecer uma variedade de scripts que automatiz
 
 - **Desligamento do Sistema:** Scripts para desligar o sistema de forma segura e controlada, encerrando todas as operações em andamento e preparando o sistema para desligamento.
 
+- **Scanner de Rede:** Script para escanear um host ou uma subrede.
+
 **Contribuições:**
 
 Contribuições são bem-vindas! Se você tiver scripts adicionais ou melhorias para os existentes, sinta-se à vontade para enviar um pull request. Este repositório é uma comunidade onde podemos colaborar e compartilhar conhecimentos sobre automação de scripts em redes de computadores.
