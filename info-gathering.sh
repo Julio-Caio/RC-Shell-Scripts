@@ -11,7 +11,7 @@ isInstalled() {
 
 # Função para verificar se o usuário é root
 areYouRoot() {
-    if [ "$EUID" -ne 0 ]; then
+    if ["$EUID" -ne 0]; then
         return 1
     else
         return 0
@@ -35,7 +35,7 @@ varredura() {
     (2) Varredura Agressiva:               nmap -sS -A [ip alvo]
     (3) Varredura de Enumeração de Hosts:  nmap -sN -O [ip alvo]
     
-    [ Quais das seguintes opções gostaria de realizar?]"
+    [ Quais das seguintes opções gostaria de realizar? ]"
     
     echo -e "\n"
     read -p "> Digite a opção desejada: " opcao
@@ -54,22 +54,24 @@ varredura() {
 }
 
 # Verifica se o pacote nmap está instalado
-if ! isInstalled "nmap"; then
-    echo "Nmap não está instalado no sistema."
-    echo "Deseja instalar o nmap? (s/n)"
-    read -p "Digite a opção desejada: " opcao
-    if [ "$opcao" == "s" ]; then
-        apt-get install nmap
-        echo "Digite o seu IP alvo para realizar a varredura."
-        read -p "Digite o IP alvo: " target_ip
-        varredura "$target_ip"
+while true; do
+    if ! isInstalled "nmap"; then
+        echo "Nmap não está instalado no sistema."
+        echo "Deseja instalar o nmap? (s/n)"
+        read -p "Digite a opção desejada: " opcao
+        if [ "$opcao" == "s" ]; then
+            apt-get install nmap
+            echo "Digite o seu IP alvo para realizar a varredura."
+            read -p "Digite o IP alvo: " target_ip
+            varredura "$target_ip"
+        else
+            echo "Instalação do nmap cancelada."
+        fi
     else
-        echo "Instalação do nmap cancelada."
+        echo -e "\nDigite o seu IP alvo para realizar a varredura."
+        read -p "> Digite o IP alvo: " target_ip
+        varredura "$target_ip"
     fi
-else
-    echo -e "\nDigite o seu IP alvo para realizar a varredura."
-    read -p "> Digite o IP alvo: " target_ip
-    varredura "$target_ip"
-fi
+done
 
 # Fim do script
