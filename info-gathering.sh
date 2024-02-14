@@ -57,7 +57,7 @@ varredura() {
 while true; do
     if ! isInstalled "nmap"; then
         echo "Nmap não está instalado no sistema."
-        echo "Deseja instalar o nmap? (s/n)"
+        echo -e "\nDeseja instalar o nmap? (s/n)"
         read -p "Digite a opção desejada: " opcao
         if [ "$opcao" == "s" ]; then
             apt-get install nmap
