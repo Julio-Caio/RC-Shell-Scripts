@@ -52,9 +52,7 @@ elif [ "$opcao" == 2 ]; then
     ls -l "$diretorio_destino"
 
 elif [ "$opcao" == 3 ]; then
-    sudo apt update
-    sudo apt upgrade -y
-    sudo apt autoremove -y
+    sudo apt update && sudo apt upgrade -y
 
 elif [ "$opcao" == 4 ]; then
     echo "Qual o IP de destino?"
