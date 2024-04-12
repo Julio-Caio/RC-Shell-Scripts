@@ -84,7 +84,7 @@ while true; do
     echo -e "\033[38;5;10m[+]🐳 Pegando a lista de containers em execução\033[38;5;15m\n"
     echo -e "[✅] Total de containers: $(echo "$containers" | wc -l) \n"
 
-    echo -e "\033[38;5;10m[+]🐳 Listando containers em execução com uso de CPU acima de 5%\033[38;5;15m\n"
+    echo -e "\033[38;5;10m[+]🐳 Listando containers em execução com uso de CPU acima de 200%\033[38;5;15m\n"
     echo "ID                           NOME                         CPU"
 
     for container in $containers; do
