@@ -47,14 +47,7 @@ echo -e "
 
 echo "[+]🐳 Iniciando script de monitoramento de containers"
 echo "[+]🐳 Iniciando monitoramento de containers"
-
-# Limitando uso de CPU do servidor
 echo "[+]🔧 Limitando uso de CPU do servidor"
-
-# Verifica se o pacote stress está instalado, se não, instala
-if ! dpkg -s stress &>/dev/null; then
-    sudo apt-get install -y stress
-fi
 
 # variáveis pra cronometrarmos
 interval=$((60)) # tempo limite: 1 minuto
