@@ -1,0 +1,26 @@
+# Description:     TASK remove users
+#
+# Initial version: Júlio Caio Rodrigues
+
+---
+- name: Bloquear a conta do usuário
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ users_to_remove }}"
+  ignore_errors: yes
+  register: removed_users
+
+- name: Remover o diretório home do usuário
+  ansible.builtin.file:
+    path: "/home/{{ item }}"
+    state: absent
+  loop: "{{ users_to_remove }}"
+  ignore_errors: yes
+
+- name: Registrar remoção no arquivo de log
+  ansible.builtin.lineinfile:
+    path: "{{ log_directory }}/removals.log"
+    create: yes
+    line: "Usuário {{ item }} removido em {{ ansible_date_time.iso8601 }} do servidor {{ inventory_hostname }}"
+  loop: "{{ users_to_remove }}"

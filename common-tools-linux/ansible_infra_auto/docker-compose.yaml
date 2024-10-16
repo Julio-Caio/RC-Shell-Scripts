@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  server1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server1
+    ports:
+      - "2221:22"
+    networks:
+      - my_network
+
+  server2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server2
+    ports:
+      - "2222:22"
+    networks:
+      - my_network
+
+  server3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server3
+    ports:
+      - "2223:22"
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge

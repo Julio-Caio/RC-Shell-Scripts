@@ -1,0 +1,14 @@
+---
+- name: Remove old users from servers
+  hosts: servers
+  become: true
+  vars_files:
+    - vars/vars.yaml
+
+  tasks:
+    - name: Check if the user exists and remove if found
+      user:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ users_to_remove }}"
+      ignore_errors: yes

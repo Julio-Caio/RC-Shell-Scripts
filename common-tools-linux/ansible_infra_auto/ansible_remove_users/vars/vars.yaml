@@ -1,0 +1,11 @@
+## DIRETÓRIO QUE ARMAZENARÁ OS LOGS DAS REMOÇÕES EM CADA SERVER
+
+log_directory: "/var/log/user_removals"
+
+# USUÁRIOS ENUMERADOS QUE DEVEM SER REMOVIDOS DOS NOSSOS AMBIENTES:
+
+users_to_remove:
+  - user1
+  - user2
+  - user3
+  - user4
