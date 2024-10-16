@@ -1,7 +1,9 @@
-**Nome do Repositório:** Redes de Computadores - Shell Scripts
+**Nome do Repositório:** Redes de Computadores - Automação de Scripts
 
 **Linguagens:**<br><br>
 ![Shell Script](https://img.shields.io/badge/shell_script-%23121011.svg?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-257bd6?style=for-the-badge&logo=docker&logoColor=white)
+
 
 **Descrição:**
 
@@ -13,21 +15,15 @@ O objetivo deste repositório é fornecer uma variedade de scripts que automatiz
 
 **Conteúdo:**
 
-- **Limpeza de Histórico:** Scripts para limpar o histórico de comandos do shell, fornecendo uma limpeza rápida e fácil após o uso do terminal.
+- **Preparação de ambiente inicial:** Para auxiliar na instalação das principais dependências e criação de usuários, além da configuração de serviços (ex.: NFS, SSH, Docker, NGINX)
 
 - **Backup de Arquivos:** Ferramentas para realizar backups automáticos de arquivos e diretórios importantes, garantindo a segurança e a integridade dos dados.
 
-- **Atualização do Sistema:** Scripts que automatizam o processo de atualização do sistema operacional, mantendo o software atualizado com as últimas correções e melhorias de segurança.
-
 - **Transferência de Arquivos:** Ferramentas para facilitar a transferência de arquivos entre diferentes dispositivos na rede, oferecendo uma solução rápida e confiável para compartilhar dados.
 
-- **Verificação de IP:** Scripts que ajudam a identificar e exibir o endereço IP, fornecendo informações importantes sobre a configuração de rede.
-
-- **Mudança de Endereço MAC:** Ferramentas para alterar o endereço MAC da placa de rede, oferecendo flexibilidade e controle sobre a identidade de rede do dispositivo.
-
-- **Desligamento do Sistema:** Scripts para desligar o sistema de forma segura e controlada, encerrando todas as operações em andamento e preparando o sistema para desligamento.
-
-- **Scanner de Rede:** Script para escanear um host ou uma subrede.
+- **Restart de Containers c/ Alto Processamento:** Ferramentas para facilitar monitoramento e restart de containers com alto consumo de CPU.
+  
+- **Remoção de usuários em servidores remotos:** Para auxiliar na remoção de usuários antigos ou que não devem estar mais presentes em seus ambientes.
 
 **Contribuições:**
 
