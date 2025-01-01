@@ -2,67 +2,108 @@
 
 # Copyright (C) 2025 Julio Caio
 
-# File:            enum-domain
+# File:   enum-domain
 
-# Author: Julio Caio
+# Author: Julio Caio            <https://github.com/Julio-Caio>
 
 # Description: Check which domains are receiving requests or still need to be migrated on the Web server (${TYPE_WEBSERVER})
 
 # -----------------------------------------------------------------------------
-#                                 MAIN VARIABLES
+#                                  MAIN VARIABLES
 # -----------------------------------------------------------------------------
 
 DATE_EXEC=$(date "+%d/%m/%Y")
 LAST_MODIFICATION_DATE="01/01/2025"
-TYPE_WEBSERVER="nginx"  # define your web server (nginx || apache2)
-SCRIPT_VERSION="1.0"    # Version of this script
-DOMAINS_FILE=""         # list containing all domains in /etc/<webserver>/sites-enabled
-LOGS_LIST=""            # path to the logs of each domain configured in /etc/<webserver>/sites-enabled
-PENDING_DOMAINS_FILE="" # output.txt
+SCRIPT_VERSION="1.2"
+
+DOMAINS_FILE="/tmp/lista_dominios.txt"              # List of domains
+LOG_PATHS_FILE="/tmp/lista_dir_logs_dominios.txt"   # Paths of logs associated with domains
+ACTIVE_DOMAINS_FILE="/tmp/dominios_nao_migrados_ativos.txt" # Active domains not yet migrated
 
 # -----------------------------------------------------------------------------
-#                                 FUNCTIONS
+#                                  FUNCTIONS
 # -----------------------------------------------------------------------------
 
 # Function: Check if the user is root
 isRoot() {
-        if [ "$(id -u)" -ne 0 ]; then
-            echo "This script requires privileges!"
-            exit 1
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "This script requires root privileges!"
+        exit 1
+    fi
+}
+
+# Function: List configured domains and logs
+listDomainsAndLogs() {
+    echo "=== Generating list of domains and logs ==="
+    : > "$DOMAINS_FILE"
+    : > "$LOG_PATHS_FILE"
+
+    for config_file in /etc/nginx/sites-enabled/*; do
+        domain_name=$(basename "$config_file")
+        echo "$domain_name" >> "$DOMAINS_FILE"
+
+        # Search for the associated access.log path
+        access_log_path=$(grep -oP 'access_log \K\S+' "$config_file" | sed 's/;$//')
+        if [[ -n "$access_log_path" ]]; then
+            echo "$domain_name|$access_log_path" >> "$LOG_PATHS_FILE"
         fi
-}
-
-# Function: List domains
-listar_dominios() {
-            echo "=== Domains in /etc/${TYPE_WEBSERVER}/sites-enabled ==="
-            ls /etc/${TYPE_WEBSERVER}/sites-enabled > "$DOMAINS_FILE"
-            cat "$DOMAINS_FILE"
-}
-
-# Function: List log files
-listar_arquivos_log() {
-            echo "=== Log Directories ==="
-            while IFS= read -r domain; do
-                if [[ -f "/etc/${TYPE_WEBSERVER}/sites-enabled/$domain" ]]; then
-                    access_log=$(grep -oP 'access_log \K\S+' "/etc/${TYPE_WEBSERVER}/sites-enabled/$domain" | sed 's/;$//')
-                    echo "$access_log" >> "$LOGS_LIST"
-                fi
-            done < "$DOMAINS_FILE"
-            sed -i 's/;$//' "$LOGS_LIST"
-            cat "$LOGS_LIST" | sort -u
-}
-
-## Function to correctly format the domains found in the log files
-formatDomain() {
-    local notFormatted=("") # Here you can define possible log files that don't follow the patterns of other domains
-    local suffixDefault=".company.com"
-    for domain in "${notFormatted[@]}"; do
-        sed -i "s/\b${domain}\b/${domain}.${suffixDefault}/g" "$PENDING_DOMAINS_FILE"
     done
+
+    echo "Listed domains:"
+    cat "$DOMAINS_FILE"
+    echo -e "\nAssociated log paths:"
+    cat "$LOG_PATHS_FILE"
 }
 
-## Function to animate dots
-animate_dots() {
+# Function: Identify active domains
+identifyActiveDomains() {
+    echo -e "=== Identifying active domains ==="
+    : > "$ACTIVE_DOMAINS_FILE"
+
+    find /var/log/nginx -maxdepth 1 -type f \( -name "*_access.log" -o -name "*_error.log" \) -newermt "10 days ago" \
+        -exec basename {} \; | sed -r 's/_access\.log$//' | sed -r 's/_error\.log$//' | sort -u | while read -r log_prefix; do
+
+        ## Check if the log prefix is in the configured files
+        domain_found=$(grep "|.*/${log_prefix}_access.log" "$LOG_PATHS_FILE" | cut -d '|' -f1)
+        
+        if [[ -n "$domain_found" ]]; then
+            echo "$domain_found" >> "$ACTIVE_DOMAINS_FILE"
+        else
+            ## Search in /etc/nginx/sites-enabled to identify the domain
+            related_domain=$(grep -Rl "/${log_prefix}_error.log" /etc/nginx/sites-enabled | xargs -I {} basename {})
+            if [[ -n "$related_domain" ]]; then
+                echo "$related_domain" >> "$ACTIVE_DOMAINS_FILE"
+            fi
+        fi
+    done
+
+    animateDots "Enumerating domains"
+    
+    # Format domains by removing underscores and replacing them with "."
+    sed -i 's/_/./g' "$ACTIVE_DOMAINS_FILE"
+
+    echo -e "Active domains:\n"
+    sleep 1
+    cat "$ACTIVE_DOMAINS_FILE"
+    echo "===================================="
+    sleep 1
+    echo -e "\nTotal domains found: \e[1;31m$(wc -l < "$ACTIVE_DOMAINS_FILE")\e[0m"
+}
+
+# Function: Validate active domains
+validateActiveDomains() {
+    echo "=== Validating active domains with logs ==="
+    while read -r domain; do
+        if ! grep -q "^$domain$" "$DOMAINS_FILE"; then
+            echo -e "\e[31m[ ! ] Domain not configured: $domain\e[0m"
+        else
+            echo -e "\e[32m[ + ] Active and configured domain: $domain\e[0m"
+        fi
+    done < "$ACTIVE_DOMAINS_FILE"
+}
+
+## Function: Dots animation
+animateDots() {
     local message="$1"
     local count=0
     while [ $count -lt 3 ]; do
@@ -74,47 +115,31 @@ animate_dots() {
         sleep 0.3
         count=$((count + 1))
     done
-    echo -ne "\r$message... \e[1;32mcompleted!\e[0m \n"
+    echo -ne "\r$message... \e[1;32mCompleted!\e[0m \n"
 }
 
-# Function: Check active domains
-verificar_dominios_ativos() {
-        echo -e "\e[33m[ + ] Searching for domains...\e[0m"
-        animate_dots "Searching for domains"
-        find /var/log/${TYPE_WEBSERVER} -maxdepth 1 -type f \( -name "*_access.log" \) -newermt "10 days ago" -exec basename {} \; | sed -r 's/_access\.log$//' | sort -u > $PENDING_DOMAINS_FILE
-        formatDomain
-        # Replace underline with dot for specific domains only
-        sed -i 's/_/./g' $PENDING_DOMAINS_FILE
-
-        # Display the sorted list with numbering
-        cat $PENDING_DOMAINS_FILE | nl -w 2 -s '. ' | while read -r num domain; do
-        echo -e "$num\e[32m$domain\e[0m"
-    done
-}
-
-### Main menu ###
-main() {
+# Main menu
+mainMenu() {
     while true; do
         echo -e "\n==== Main Menu ===="
-        echo "1) List domains"
-        echo "2) List log files"
-        echo "3) Check active domains"
+        echo "1) List configured domains and logs"
+        echo "2) Identify active domains"
+        echo "3) Validate active domains"
         echo "4) Exit"
         read -rp "Choose an option: " option
         echo -e "==============================\n"
         case $option in
-            1) listar_dominios ;;
-            2) listar_arquivos_log ;;
-            3) verificar_dominios_ativos ;;
+            1) listDomainsAndLogs ;;
+            2) identifyActiveDomains ;;
+            3) validateActiveDomains ;;
             4) exit 0 ;;
             *) echo "Invalid option! Try again." ;;
         esac
     done
 }
 
-
 # -----------------------------------------------------------------------------
-#                                    MAIN
+#                                  MAIN
 # -----------------------------------------------------------------------------
 isRoot
 
@@ -126,8 +151,8 @@ echo -e "\n\e[33m
 |_____|_| \_|\___/|_|  |_|     |____/ \___/|_|  |_/_/   \_\___|_| \_|
                            \e[0m  
 _________________________ v$SCRIPT_VERSION ____________________________
-Last modification on $LAST_MODIFICATION_DATE\n"
+            Last modification on $LAST_MODIFICATION_DATE\n"
 
 echo "Script executed on: $DATE_EXEC"
 
-main
+mainMenu
