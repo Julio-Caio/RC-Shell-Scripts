@@ -13,7 +13,7 @@ monitoramento via Grafana.
 
 ### Arquitetura
 
-![Arquitetura Geral](architeture.png)
+![Arquitetura Geral](../topology    .png)
 
 <hr>
 

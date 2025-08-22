@@ -1,0 +1,3 @@
+1# O Prometheus por padrão ouve métricas num endpoint HTTP /metrics
+
+-> (22/08) Desse modo, deve adaptar o broker MQTT para parsear as mensagens dos sensores para o formato que o Prometheus entenda.

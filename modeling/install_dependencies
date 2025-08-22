@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Definição de cores para as saídas
+RED='\e[31m'       # Vermelho
+GREEN='\e[32m'     # Verde
+YELLOW='\e[33m'    # Amarelo
+BLUE='\e[34m'      # Azul
+CYAN='\e[36m'      # Ciano
+RESET='\e[0m'      # Resetar cor
+
+is_root() {
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${RED}Require root privileges!${RESET}\n"
+        exit 1
+    fi
+}
+
+# == Função para atualizar e fazer upgrade no sistema == 
+function atualizar_sistema() {
+    apt-get update -y && apt upgrade -y
+
+    if [[ $? -eq 0 ]]; then
+        echo -e "${CYAN}Sistema atualizado e upgrade realizado com sucesso.${RESET}"
+    else
+        echo -e "${RED}Erro ao atualizar o sistema.${RESET}"
+        exit 1
+    fi
+}
+
+# == Função para instalar dependências básicas ==
+function instalar_dependencias() {
+    apt-get install -y openssh-server openssh-client htop vim
+
+    if [[ $? -eq 0 ]]; then
+        echo -e "${CYAN}Dependências básicas instaladas.${RESET}"
+    else
+        echo -e "${RED}Erro ao instalar as dependências básicas.${RESET}"
+        exit 1
+    fi
+}
+
+# == Função para instalar Docker == 
+function instalar_docker() {
+        apt-get remove -y docker docker-engine docker.io containerd runc
+        apt-get install -y ca-certificates curl gnupg lsb-release
+        curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        apt-get update -y
+        apt-get install -y docker-ce docker-ce-cli containerd.io
+
+    systemctl start docker
+    systemctl enable docker
+
+    if [[ $? -eq 0 ]]; then
+        echo -e "${BLUE}Docker instalado e iniciado.${RESET}"
+    else
+        echo -e "${RED}Erro ao instalar ou iniciar o Docker.${RESET}"
+        exit 1
+    fi
+}
+
+# == Função para instalar Docker-Compose ===
+function instalar_docker_compose() {
+    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+    curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+    if [[ $? -eq 0 ]]; then
+        echo -e "${BLUE}Docker-Compose versão $COMPOSE_VERSION instalado.${RESET}"
+    else
+        echo -e "${RED}Erro ao instalar o Docker-Compose.${RESET}"
+        exit 1
+    fi
+}
+
+main()
+{
+    is_root
+    verificar_distro
+    echo -e "\n
+    A seguir, serão instaladas e configuradas as seguintes dependências:
+    [ * ] Docker && Docker-Compose
+
+    Gostaria de prosseguir? [Y/n] \n"
+
+    read -rp "Deseja prosseguir com a instalação? [Y/n]: " opcao
+
+    if [[ "$opcao" == "Y" || "$opcao" == "y" || -z "$opcao" ]]; then
+        atualizar_sistema
+        instalar_dependencias
+        instalar_docker
+        instalar_docker_compose
+
+        echo -e "${GREEN}Ambiente preparado com sucesso para produção.${RESET}"
+    else
+        echo -e "${RED}Saindo...${RESET}"
+        exit 1
+    fi
+}
+
+main
