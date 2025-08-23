@@ -1,3 +1,8 @@
 1# O Prometheus por padrão ouve métricas num endpoint HTTP /metrics
 
 -> (22/08) Desse modo, deve adaptar o broker MQTT para parsear as mensagens dos sensores para o formato que o Prometheus entenda.
+
+=== O que fazer? ===
+
+-> subir container mosquitto [ok] - 23/08/2025
+-> subir rede mininet [ok] - 23/08/2025

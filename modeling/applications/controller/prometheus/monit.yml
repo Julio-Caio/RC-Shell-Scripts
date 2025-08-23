@@ -6,9 +6,11 @@ services:
     restart: always
     container_name: "prometheus_controller"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - brteste02
 
   grafana:
     image: grafana/grafana-oss
@@ -21,6 +23,12 @@ services:
       - GF_PLUGINS_PREINSTALL=grafana-clock-panel,grafana-simple-json-datasource
     ports:
       - 3000:3000
+    networks:
+      - brteste02
 
 volumes:
   grafana_data:
+
+networks:
+  brteste02:
+    external: true

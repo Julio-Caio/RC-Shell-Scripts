@@ -29,7 +29,7 @@ function atualizar_sistema() {
 
 # == Função para instalar dependências básicas ==
 function instalar_dependencias() {
-    apt-get install -y openssh-server openssh-client htop vim
+    apt-get install -y openssh-server openssh-client htop vim python3-pip python3.11-venv openvswitch-testcontroller mininet
 
     if [[ $? -eq 0 ]]; then
         echo -e "${CYAN}Dependências básicas instaladas.${RESET}"
@@ -74,6 +74,22 @@ function instalar_docker_compose() {
     fi
 }
 
+function criar_redes_docker() {
+    # rede sensores: brteste01
+    docker network create --driver bridge --subnet=172.18.0.0/24 brteste01 \
+        && echo "Rede brteste01 criada!" \
+        || echo "Erro ao criar rede brteste01!"
+
+    # rede monitoramento: brteste02
+    docker network create --driver bridge --subnet=172.19.0.0/24 brteste02 \
+        && echo "Rede brteste02 criada!" \
+        || echo "Erro ao criar rede brteste02!"
+
+    # enviar ao arquivo 'mininet_interfaces.txt' os nomes das bridges
+    echo "br-$(docker network inspect brteste01 -f '{{.Id}}' | cut -c1-12)" > mininet_interfaces.txt
+    echo "br-$(docker network inspect brteste02 -f '{{.Id}}' | cut -c1-12)" >> mininet_interfaces.txt
+}
+
 main()
 {
     is_root
@@ -91,6 +107,7 @@ main()
         instalar_dependencias
         instalar_docker
         instalar_docker_compose
+        criar_redes_docker
 
         echo -e "${GREEN}Ambiente preparado com sucesso para produção.${RESET}"
     else

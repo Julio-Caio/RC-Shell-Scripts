@@ -2,7 +2,6 @@
 
 **Objetivos**:
     - Escutar as mensagens PUBLISHER dos sensores (MQTT)
-    - Escutar mensagens HTTP
     - Rotear mensagens para à Rede MiniNet
 
 ## 1. Estrutura:
