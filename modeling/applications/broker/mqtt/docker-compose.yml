@@ -9,6 +9,8 @@ services:
     ports:
       - "1883:1883"
       - "9001:9001"
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf:rw
       - ./config/pwfile:/mosquitto/config/pwfile

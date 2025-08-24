@@ -4,7 +4,10 @@ services:
   prometheus:
     image: prom/prometheus
     restart: always
+    user: root ### usuário root para criar uma rota de volta para a rede 172.18.0.0/24
     container_name: "prometheus_controller"
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
