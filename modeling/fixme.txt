@@ -6,3 +6,5 @@
 
 -> subir container mosquitto [ok] - 23/08/2025
 -> subir rede mininet [ok] - 23/08/2025
+-> criar os dockerfiles e scripts de emulação de tráfego IoT
+-> 

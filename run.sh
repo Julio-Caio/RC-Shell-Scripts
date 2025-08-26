@@ -47,27 +47,10 @@ start_mininet() {
     fi
 }
 
-criar_rotas() {
-    echo "[INFO] Creating routes in Mosquitto..."
-    if ! docker exec broker_mosquitto ip route show | grep -q "172.19.0.0/24"; then
-        docker exec broker_mosquitto ip route add 172.19.0.0/24 via 172.18.0.10
-    else
-        echo "[INFO] Route 172.19.0.0/24 already exists in Mosquitto"
-    fi
-
-    echo "[INFO] Creating routes in Prometheus..."
-    if ! docker exec prometheus_controller ip route show | grep -q "172.18.0.0/24"; then
-        docker exec prometheus_controller ip route add 172.18.0.0/24 via 172.19.0.10
-    else
-        echo "[INFO] Route 172.18.0.0/24 already exists in Prometheus"
-    fi
-}
-
-
 
 main() {
-    echo "[INFO] Downloading dependencies...\n"
-    ./install_dependencies
+    #echo "[INFO] Downloading dependencies...\n"
+    #./install_dependencies
     echo "[INFO] Starting to creating scenario...\n"
     stop_containers
     prepare_observability
