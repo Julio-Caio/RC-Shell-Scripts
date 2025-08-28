@@ -3,7 +3,7 @@ FROM debian:bookworm
 
 # Instala Python, pip e dependências
 RUN apt-get update && apt-get install -y \
-    python3 python3-venv python3-pip wget mosquitto-clients tar vim procps net-tools inetutils-ping iperf3 telnet \
+    python3 python3-venv python3-pip wget mosquitto-clients tar vim procps net-tools iproute2 inetutils-ping iperf3 telnet \
     && rm -rf /var/lib/apt/lists/*
 
 # Cria virtualenv

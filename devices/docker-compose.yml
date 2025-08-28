@@ -26,6 +26,8 @@ services:
     ports:
       - "9101:9100"
       - "8001:8000"
+    cap_add:
+      - NET_ADMIN 
     volumes:
       - esp32-flash:/app/data
     deploy:
@@ -42,6 +44,8 @@ services:
         context: ./profile/
         dockerfile: P2/Dockerfile-P2 
     container_name: edge-vision-p2
+    cap_add:
+      - NET_ADMIN
     restart: unless-stopped
     ports:
         - "9100:9100"
@@ -59,6 +63,8 @@ services:
         context: ./profile
         dockerfile: P3/Dockerfile-P3 
     container_name: ops243-p3
+    cap_add:
+        - NET_ADMIN
     restart: unless-stopped
     ports:
         - "9102:9100"

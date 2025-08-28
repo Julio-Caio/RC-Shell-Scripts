@@ -6,9 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Dependências nativas para OpenCV + GStreamer + V4L2
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 libsm6 libxext6 libxrender1 libgl1 \
-    gstreamer1.0-tools gstreamer1.0-libav \
+    gstreamer1.0-tools gstreamer1.0-libav iperf3 \
     gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
-    v4l-utils ffmpeg ca-certificates && \
+    v4l-utils ffmpeg ca-certificates iproute2 net-tools && \
     rm -rf /var/lib/apt/lists/*
 
 # App

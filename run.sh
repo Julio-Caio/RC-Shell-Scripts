@@ -20,7 +20,7 @@ PATH_BROKER_FILES="${BASE}/devices"
 PATH_MININET_FILES="${BASE}/stack-infra/mininet"
 
 BRTESTE01_RANGE="172.18.0.0/24"
-BRTESTE02_RANGE="172.19.0.0/24"
+BRTESTE02_RANGE="172.19.0.0"
 
 BRTESTE01_DEVICES=(esp32-p1 edge-vision-p2 ops243-p3 broker_mosquitto)
 BRTESTE02_DEVICES=(grafana prometheus)
@@ -82,27 +82,70 @@ create_routes() {
 }
 
 implement_routes() {
-    # Containers em brteste01 -> rota para brteste02
+    echo -e "Implementando rotas nos devices IoT e broker\n"
+
     for c in "${BRTESTE01_DEVICES[@]}"; do
-        create_routes "$c" "$GW_BRTESTE01" "$BRTESTE02_RANGE"
+        echo "[INFO] Adicionando rota no container $c: ${BRTESTE02_RANGE} via ${GW_BRTESTE01}"
+
+        # Checa se a rota já existe
+        if docker exec "$c" sh -c "ip route | grep -q '${BRTESTE02_RANGE}'"; then
+            echo "[WARN] Rota já existe no container $c"
+            continue
+        fi
+
+        # Tenta adicionar com ip route
+        docker exec "$c" sh -c "ip route add ${BRTESTE02_RANGE} via ${GW_BRTESTE01}" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "[OK] Rota adicionada com ip route no container $c"
+        else
+            # fallback: tenta route add -net se ip não existir ou falhar
+            docker exec "$c" sh -c "route add -net ${BRTESTE02_RANGE} gw ${GW_BRTESTE01}" 2>/dev/null
+            if [ $? -eq 0 ]; then
+                echo "[OK] Rota adicionada com route add -net no container $c"
+            else
+                echo "[ERRO] Falha ao adicionar rota no container $c"
+                docker exec "$c" ip route show
+            fi
+        fi
     done
 
-    # Containers em brteste02 -> rota para brteste01
+    echo -e "Implementando rotas no Prometheus e Grafana\n"
     for c in "${BRTESTE02_DEVICES[@]}"; do
-        create_routes "$c" "$GW_BRTESTE02" "$BRTESTE01_RANGE"
+        echo "[INFO] Adicionando rota no container $c: ${BRTESTE01_RANGE} via ${GW_BRTESTE02}"
+
+        if docker exec "$c" sh -c "ip route | grep -q '${BRTESTE01_RANGE}'"; then
+            echo "[WARN] Rota já existe no container $c"
+            continue
+        fi
+
+        docker exec "$c" sh -c "ip route add ${BRTESTE01_RANGE} via ${GW_BRTESTE02}" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "[OK] Rota adicionada com ip route no container $c"
+        else
+            docker exec "$c" sh -c "route add -net ${BRTESTE01_RANGE} gw ${GW_BRTESTE02}" 2>/dev/null
+            if [ $? -eq 0 ]; then
+                echo "[OK] Rota adicionada com route add -net no container $c"
+            else
+                echo "[ERRO] Falha ao adicionar rota no container $c"
+                docker exec "$c" ip route show
+            fi
+        fi
     done
 }
 
 main() {
     echo -e "[INFO] Starting to create scenario...\n"
     sleep 1
-    stop_containers
+#    stop_containers
     sleep 1
-    prepare_observability
+#    prepare_observability
     sleep 2
-    implement_routes
-    start_mininet &
-    echo -e "[SUCCESS] Scenario initialized!\n"
+    if ( implement_routes ); then
+	 echo -e "[SUCCESS] Scenario initialized!\n"
+    else
+	echo -e "[ERROR] Scenario initialization failed. Check routes!\n"
+        exit 1
+    fi
 }
 
 main

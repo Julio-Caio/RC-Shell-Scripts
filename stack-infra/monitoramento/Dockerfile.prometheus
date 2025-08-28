@@ -1,0 +1,10 @@
+FROM prom/prometheus:latest
+
+USER root
+
+# Instala iperf3 (Debian/Alpine dependendo da imagem base)
+RUN apt-get update && apt-get install -y iperf3 && rm -rf /var/lib/apt/lists/*
+
+# Mantém o entrypoint original do Prometheus
+ENTRYPOINT ["/bin/prometheus"]
+CMD ["--config.file=/etc/prometheus/prometheus.yml"]
