@@ -1,0 +1,84 @@
+#  ESP32‑WROOM‑32
+services:
+  # broker
+  mosquitto:
+    image: eclipse-mosquitto
+    hostname: mosquitto
+    container_name: broker_mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./profile/mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:rw
+      #- ./mqtt/config/pwfile:/mosquitto/config/pwfile (caso houvesse autenticação)
+    networks:
+      - brteste01
+
+  esp32-p1:
+    container_name: esp32-p1
+    build:
+      context: ./profile
+      dockerfile: P1/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "9101:9100"
+      - "8001:8000"
+    volumes:
+      - esp32-flash:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "64M"
+    networks:
+      - brteste01
+
+  # Edge Vision
+  camera-p2:
+    build:
+        context: ./profile/
+        dockerfile: P2/Dockerfile-P2 
+    container_name: edge-vision-p2
+    restart: unless-stopped
+    ports:
+        - "9100:9100"
+        - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256m"
+    networks:
+      - brteste01
+  # OmniPreSense OPS243-A
+  ops243-p3:
+    build:
+        context: ./profile
+        dockerfile: P3/Dockerfile-P3 
+    container_name: ops243-p3
+    restart: unless-stopped
+    ports:
+        - "9102:9100"
+        - "8002:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "64m"
+    networks:
+      - brteste01
+
+volumes:
+  esp32-flash:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=16m
+
+networks:
+  brteste01:
+    external: true 

@@ -1,0 +1,34 @@
+# Base Debian
+FROM debian:bookworm
+
+# Instala Python, pip e dependências
+RUN apt-get update && apt-get install -y \
+    python3 python3-venv python3-pip wget mosquitto-clients tar vim procps net-tools inetutils-ping iperf3 telnet \
+    && rm -rf /var/lib/apt/lists/*
+
+# Cria virtualenv
+
+RUN python3 -m venv /opt/venv
+
+WORKDIR /app
+
+COPY requirements/requirements-P1.txt /app/requirements.txt
+# Instala pacotes dentro do venv
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Baixa node_exporter
+ENV NODE_EXPORTER_VERSION=1.8.2
+RUN wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz \
+    && tar xvf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz \
+    && mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/ \
+    && rm -rf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64*
+
+# Copia script MQTT
+COPY ../scripts_sim/sensor_mqtt.py /app/sensor_mqtt.py
+WORKDIR /app
+
+# Expõe portas: node_exporter + métricas do script
+EXPOSE 9100 8000
+
+# Comando para rodar node_exporter e script simultaneamente
+CMD ["sh", "-c", "node_exporter & /opt/venv/bin/python /app/sensor_mqtt.py"]

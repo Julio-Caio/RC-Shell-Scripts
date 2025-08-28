@@ -1,0 +1,34 @@
+# modeling/devices/edge-vision/Dockerfile
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Dependências nativas para OpenCV + GStreamer + V4L2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 libsm6 libxext6 libxrender1 libgl1 \
+    gstreamer1.0-tools gstreamer1.0-libav \
+    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+    v4l-utils ffmpeg ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# App
+WORKDIR /app
+COPY requirements/requirements-P2.txt /app/requirements.txt
+COPY scripts_sim/vision_kpi.py /app/vision_kpi.py
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Variáveis padrão (podem ser sobrescritas no compose)
+ENV BROKER_HOST=mosquitto \
+    BROKER_PORT=1883 \
+    MQTT_TOPIC=smartcity/cam/p2/kpi \
+    DEVICE_ID=cam-p2-01 \
+    KPI_RATE=1 \
+    SOURCE=/app/sample.mp4 \
+    USE_GSTREAMER=false \
+    PROM_PORT=8000
+
+EXPOSE 8000
+
+CMD ["python", "-u", "vision_kpi.py"]
+

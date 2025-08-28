@@ -20,11 +20,12 @@ RUN wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_E
     && rm -rf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64*
 
 # Copia script MQTT
-COPY sensor_mqtt.py /app/sensor_mqtt.py
+COPY ../scripts_sim/ops243a_emulator.py /app/
+
 WORKDIR /app
 
 # Expõe portas: node_exporter + métricas do script
 EXPOSE 9100 8000
 
 # Comando para rodar node_exporter e script simultaneamente
-CMD ["sh", "-c", "node_exporter & /opt/venv/bin/python /app/sensor_mqtt.py"]
+CMD ["sh", "-c", "node_exporter & /opt/venv/bin/python /app/ops243a_emulator.py"]
