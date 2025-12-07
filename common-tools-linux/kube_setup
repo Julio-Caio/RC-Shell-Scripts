@@ -1,0 +1,164 @@
+#!/bin/bash
+#
+# Autor: Julio Caio
+# Última modificação: 06/12/2025
+# script: kub_setup
+# Função: preparar ambiente de testes kubernetes
+
+name_script="$(basename $0)"
+# Chaves:
+F_ami_root=0
+F_is_kubectl_installed=0
+F_is_docker_installed=0
+F_is_go_installed=0
+
+help="
+$name_script - Uso:\n
+	$name_script --flag
+\n
+\nOpções disponíveis:
+  --docker :      Instala o Docker\n
+  --kubectl :     Instala o kubectl\n
+  --kind :	  Instala o Kind\n
+  --minikube :    Instala o Minikube\n
+  --all  :        Instala todas as dependências
+\n
+\nExemplos:\n
+  $name_script --docker\n
+  $name_script --kubectl\n
+  $name_script --kind\n
+"
+##################################
+#    VARIÁVEIS			 #
+##################################
+# CORES
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# DEPENDÊNCIAS PARA O FUNCIONAMENTO DO KUBERNETES
+dependecies=(docker kubectl go curl)
+
+install_dependecies(){ 
+    for item in "${dependecies[@]}"; do
+   	 echo -e "Checando comando ${item}...\n"
+
+    	if command -v "$item" >/dev/null 2>&1; then
+        # monta dinamicamente o nome da variável F_is_x_installed
+        	varname="F_is_${item}_installed"
+        	declare -g "$varname=1"
+		echo -e "✅ $item encontrado..."
+    	else
+        	echo "❌ ${item} não encontrado"
+    	fi
+    done
+}
+
+# ==========================================
+# Helpers
+# ===========================================
+# Auxiliam na checagem de dependências
+# 
+# Requisitos
+# - checar quantidade de vCPUs
+# - checar quantidade de Memória
+# - checar se o go está instalado
+# - checar se o docker está instalado
+# - checar se o kubectl está instalado
+#
+
+is_root()
+{
+	if [[ "$UID" -ne 0 ]]; then
+		echo -e "Este script requer privilégios. ${RED}Execute como root${NC}\n"
+		exit 1
+	fi
+
+	F_ami_root=1
+}
+
+# ============================================
+# Funções de instalação
+# ===========================================
+
+install_kubectl()
+{
+	if [[ "${F_is_kubectl_installed}" != 1 ]]; then
+	       	echo -e "\e[94mIniciando a instalação do kubectl...\n${NC}"	
+		curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+		curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+		echo -e "${YELLOW}Verificando o hash...\n${NC}"
+		echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+		install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+		echo -e "${GREEN}Kubectl instalado com sucesso!${NC}\n"
+		
+	else
+		echo -e "${YELLOW}kubectl já está instalado.${NC}"
+	fi
+}
+
+install_kind()
+{
+	if [[ "${F_is_kind_installed}" != 1 ]]; then
+	       	echo -e "\e[94mIniciando a instalação do kind...\n${NC}"	
+		[ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
+		chmod +x ./kind
+		sudo mv ./kind /usr/local/bin/kind
+		echo -e "${GREEN}kind instalado com sucesso!${NC}\n"
+		
+	else
+		echo -e "${YELLOW}kind já está instalado.${NC}"
+	fi
+}
+
+#install_minikube()
+#{
+#}
+#
+
+install_docker(){
+	if [[ "${F_is_docker_installed}" != 1 ]]; then
+		apt install ca-certificates gnupg lsb-release
+		mkdir -m 0755 -p /etc/apt/keyrings
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+		echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+		sleep 1
+		apt update
+		apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+		sudo usermod -aG docker ${USER}
+	else
+		echo -e "${YELLOW}Docker já está instalado.${NC}"
+	fi
+
+}
+#########################################
+#	   	MAIN			#
+#########################################
+is_root
+
+case $1 in
+	-h|--help)
+		echo -e $help
+	;;
+
+	--kubectl)
+		install_kubectl
+	;;
+	--kind)
+		echo -e "${YELLOW}Instalando kind\n${NC}"
+		install_kind
+	;;
+	--minikube)
+		echo -e "${YELLOW}Instalando minikube\n${NC}"
+		# install_minikube()
+	;;
+	--all|"")
+		echo -e "${YELLOW}Executando a instalação de todas as dependências${NC}"
+		install_dependencies
+		;;
+	*) echo -e "${RED}Parâmetro desconhecido\n${NC}"
+	   exit 1
+	   ;;
+esac
